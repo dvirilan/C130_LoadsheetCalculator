@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html>
+<!-- V1.1.3 -->
+<head>
+  <!-- Include meta tag to ensure proper rendering and touch zooming -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">  
+  <style>
+      .redBorder{
+          border:3px solid red;
+      }
+      .aircraftData{
+          background-color: lightsalmon;
+      }
+      .addingData{
+          background-color: lightblue;
+      }
+      .borderTop td{
+          border-top: 1px solid black;
+      }
+      td>input{
+          width: 100%;
+      }
+      table{
+          border: 1px solid black;
+          width: 100%;
+      }
+  </style>
+</head>        
+    <body style="width: 99%" onload="initData()">
+        <table id="AircraftData"  class="aircraftData" style="width: 100%; border: 1px solid black">
+            <thead>
+                <tr>
+                    <td colspan="2">
+                        <select id="acSelector" onclick="openAcPanel(this.value)" onchange="openAcPanel(this.value)" value="Add"></select>
+                    </td>
+                    <td colspan="3">
+                        <span>Aircraft Basic Data</span>
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id='acPanel'>
+                    <td colspan="100%">
+                        <table id="acPanelTable" style="display:none; width: 100%;">
+                            <tr style="width: 100%">
+                                <td style="width: 20%">
+                                    <input type="number" min="0" max="999" id="acNumber" placeholder="AC Tail Number" onblur="Validate('acNumber',this.value,0,999)"/>
+                                </td>
+                                <td style="width: 20%">
+                                    <input type="number" min="70" max="100" id="acInitialIndex" placeholder="AC Idx" onblur="Validate('acInitialIndex',this.value,70,100)"/>
+                                </td>
+                                <td style="width: 20%">
+                                    <input type="number" min="70000" max="100000" id="acInitialLbs" placeholder="AC Lbs" onblur="Validate('acInitialLbs',this.value,70000,100000)"/>
+                                </td>
+                                <td style="width: 20%">
+                                    <input type="tel"  min="-30" max="20" id="airCrewIdx" placeholder="Crew Idx" onblur="Validate('airCrewIdx',this.value,-30,20)"/>
+                                </td>
+                                <td style="width: 20%">
+                                    <input type="number" min="850" max="2550" id="airCrewLbs" placeholder="Crew Lbs" onblur="Validate('airCrewLbs',this.value,850,2550)"/>
+                                </td>
+                            </tr>
+                            <tr style="width: 100%">
+                                <td>
+                                    <input type="number" min="0" max="10000" id="equipLbs" placeholder="AC Equip." onblur="Validate('equipLbs',this.value,0,10000)"/>
+                                </td>
+                                <!-- some android keyboards do not show "-" even on type="Tel" (LG G2)  -->
+                                <td>
+                                    <input type="tel" min="-10" max="10" id="equipIdx" placeholder="Equip. Idx" onblur="Validate('equipIdx',this.value,-10,10)"/>
+                                </td>
+                                <td style="width: 20%">
+                                    <input type="tel" min="-1000" max="5000" id="formationLbs" placeholder="formation Lbs" onblur="Validate('formationLbs',this.value,-1000,5000)"/>
+                                </td>
+                                <td style="width: 20%">
+                                    <input type="tel" min="-30" max="20" id="formationIdx" placeholder="formation Idx" onblur="Validate('formationIdx',this.value,-30,20)"/>
+                                </td>
+                                <td>
+                                    <input type="button" id="AddAcBtn" value="Update" onclick="addAcRow()" />                        
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td istyle="width: 25%">
+                        <input type="number" min="70" max="100" id="acIndex" placeholder="AC basic Index" onblur="Validate('acIndex',this.value,70,100)" onchange="drawData()" />
+                    </td>
+                    <td style="width: 25%">
+                        <input type="number" id="acLbs" placeholder="Ac Basic Lbs"  onblur="Validate('acLbs',this.value,70000,150000)" onchange="drawData()"/>
+                    </td>
+                    <td style="width: 25%">
+                        <input type="number" id="acFuel" placeholder="Takeoff Fuel" onclick="openFuelPanel()"/>
+                    </td>
+                    <td style="width: 25%">
+                        <input type="number" id="acFuelIdx" placeholder="Fuel Index" onclick="openFuelPanel()" />
+                    </td>
+                </tr>
+                <tr id='FuelPanel' style="display:none;">                    
+                        <td colspan="100%">
+                            <table style="width: 100%">
+                                <tr>
+                                    <td style="width: 25%">
+                                        <input type="number" id="outboards" placeholder="Outboard fuel"  onblur="Validate('outboards',this.value,0,17544)" />
+                                    </td>
+                                    <td style="width: 25%">
+                                        <input type="number" id="inboards" placeholder="Inboard fuel"  onblur="Validate('inboards',this.value,0,16184)" />
+                                    </td>
+                                    <td style="width: 25%">
+                                        <input type="number" id="aux" placeholder="Aux. fuel"  onblur="Validate('aux',this.value,0,12376)" />
+                                    </td>
+                                    <td style="width: 33%">
+                                        <input type="number" id="ext" placeholder="Ext. fuel"  onblur="Validate('ext',this.value,0,18500)"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button id="closeFuelPanel" onclick="closeFuelPanel()">Calc. Fuel</button>
+                                    </td>
+                                    <td colspan="100%">
+                                        <span style="margin: 0 5 5 0;">After taxi fuel reduction!</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>                    
+            </tbody>
+        </table>
+        <table>
+            <tbody>                    
+                <tr>
+                    <td>
+                        <table id="MainTable">
+                            <thead>
+                                <tr style="background-color: lightgray">
+                                    <td style="width: 30%">Index change</td>
+                                    <td style="width: 30%">Lbs</td>
+                                    <td style="width: 30%">F.S.</td>
+                                    <td>Remove</td>
+                                </tr>
+                            </thead>
+                            <tbody id="TotalBody">
+                            </tbody>
+                            <tfoot id="TotalFooter">
+                            </tfoot>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="addingData" id="FunctionsTable">
+                                <thead>
+                                        <tr>
+                                            <td colspan="100%">
+                                                <center><span>New Cargo Input Panel</span></center>
+                                            </td>
+                                        </tr>
+                                    </thead>
+                            <tbody>
+                                <tr id="newRow">
+                                    <td style="width: 44%">
+                                        <input type="number" required id="Lbs" placeholder="Lbs"  onfocus="selectAll('Lbs')" onblur="Validate('Lbs',this.value,10,40000)"/>
+                                    </td>
+                                    <td istyle="width: 44%">
+                                        <input type="number" id="FS" placeholder="F.S." onfocus="selectAll('FS')" onblur="Validate('FS',this.value,200,900)"/>
+                                    </td>
+                                    <td>
+                                        <input type="button" id="AddBtn" value="Add" type="submit" onclick="addRow()"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot style="background-color: lightgoldenrodyellow;">
+                                <tr><td colspan="100%" style="border-right: 2px solid lightblue;"><center><span>Takeoff Data</span></center></td></tr> 
+                                <tr id="TakeoffDataHeader"></tr>
+                                <tr id="TakeoffData">
+
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+    </body>
+</html>
+<script type="text/javascript">
+    ///////// GLOBALS //////////////
+    //[{fs:400,lbs:5000},...]
+    var data = [];
+    var acData = [];
+    var currentAcData = {};
+    var totalIndexChange = 0;
+    var totalLbs = 0;
+    var lastAcTailNum = undefined;
+    var isLocalStorageEnabled = true;
+
+    ///////// END GLOBALS //////////////
+    function initData(){
+        if(!acData || !acData.length){
+            acData = GetDatafromStorage("acData");
+
+            populateDropDownTailNumbers("acSelector");
+
+            lastAcTailNum = GetDatafromStorage("lastAcTailNum");
+            if(acData && acData.length && lastAcTailNum != null ){ 
+                populateAcByTailNumber(lastAcTailNum);                
+            }
+        }
+        if(!(data && !isEmptyObj(data))){
+            data = GetDatafromStorage("data");
+        }
+        drawData();
+    }
+
+    function populateDropDownTailNumbers(dropDownId){
+        try{
+        var options = "<option selected='selected'>Add</option>";
+        if(acData && acData.length){
+            for (var i=0; i<acData.length; i++){
+                var currentAc = acData[i];
+                options += "<option>" + currentAc.tailNum + "</option>";
+            }
+        }
+        options += "<option>Clear All</option>";
+        if(isLocalStorageEnabled == false){
+            options = "<option selected='selected'>Open</option>"
+        }
+        }catch(e){
+            if(isLocalStorageEnabled){
+                alert(e);
+            }
+        }
+        document.getElementById(dropDownId).innerHTML = options;
+    }
+
+    function changeDropDownSelectedItem(dropDownId, selectedValue){
+        var dropDown = document.getElementById(dropDownId);
+        var opts = dropDown.options.length;
+        for (var i=0; i<opts; i++){
+            if (dropDown.options[i].value == selectedValue){
+                dropDown.options[i].selected = true;
+                break;
+            }
+        }
+    }
+
+    function clearAcByTailNumber(){
+        document.getElementById("acNumber").value = "";
+        document.getElementById("acInitialIndex").value =  "";
+        document.getElementById("acInitialLbs").value = "";
+        document.getElementById("airCrewLbs").value = "";
+        document.getElementById("airCrewIdx").value = "";
+        document.getElementById("equipLbs").value = "";
+        document.getElementById("equipIdx").value = "";
+        document.getElementById("formationLbs").value = "";
+        document.getElementById("formationIdx").value = "";
+
+        calcAcBasiclData();
+    }
+    function populateAcByTailNumber(tailNumber){
+        if(acData && acData.length){
+            var lastAcData = getAcByTailNum (acData, tailNumber);
+            if(lastAcData){
+                document.getElementById("acNumber").value = lastAcData.tailNum || "";
+                document.getElementById("acInitialIndex").value = lastAcData.acIndex || "";
+                document.getElementById("acInitialLbs").value = lastAcData.lbs || "";
+                document.getElementById("airCrewLbs").value = lastAcData.crewLbs || "";
+                document.getElementById("airCrewIdx").value = lastAcData.crewIdx || "";
+                document.getElementById("equipLbs").value = lastAcData.equipLbs || "";
+                document.getElementById("equipIdx").value = lastAcData.equipIdx || "";
+                document.getElementById("formationLbs").value = lastAcData.formationLbs || "";
+                document.getElementById("formationIdx").value = lastAcData.formationIdx || "";
+
+                calcAcBasiclData();
+
+                document.getElementById("acFuel").value = lastAcData.acFuel || "";
+                document.getElementById("acFuelIdx").value = lastAcData.acFuelIdx || "";
+
+                document.getElementById('outboards').value = lastAcData.outboards || "";
+                document.getElementById('inboards').value = lastAcData.inboards || "";
+                document.getElementById('aux').value = lastAcData.aux || "";
+                document.getElementById('ext').value = lastAcData.ext || "";
+                changeDropDownSelectedItem("acSelector",lastAcData.tailNum);
+            }
+        }
+    }
+
+    function calcAcBasiclData(){
+        var acInitIdx = document.getElementById("acInitialIndex").value;
+        var acInitLbs = document.getElementById("acInitialLbs").value;
+        var acCrewIdx = document.getElementById("airCrewIdx").value;
+        var acCrewLbs = document.getElementById("airCrewLbs").value;
+        var equipIdx = document.getElementById("equipIdx").value;
+        var equipLbs = document.getElementById("equipLbs").value;
+        var formationIdx = document.getElementById("formationIdx").value;
+        var formationLbs = document.getElementById("formationLbs").value;
+
+        document.getElementById("acIndex").value = ((parseFloat(acInitIdx) + parseFloat(acCrewIdx) + parseFloat(equipIdx) + parseFloat(formationIdx)).toFixed(1)) || "";
+        document.getElementById("acLbs").value = ((parseFloat(acInitLbs) + parseFloat(acCrewLbs) + parseFloat(equipLbs) + parseFloat(formationLbs)).toFixed(1)) || "";
+        
+    }
+    function addRow() {
+        var newFS = document.getElementById("FS").value;
+        var newLbs = document.getElementById("Lbs").value;
+        //document.getElementById("Total").insertAdjacentHTML('beforebegin',"<tr id='" + (index) + "'><td item-width='33%'>" + newFS +"</td><td item-width='33%'>" + newLbs +"</td><td item-width='33%'><input type='button' value='X' onclick='removeRow("+index+")'></input></td></tr>");
+        //index++;
+        var dataItem = {fs:newFS, lbs:newLbs};
+        data.push(dataItem);
+        document.getElementById("FS").value = "";
+        document.getElementById("Lbs").value = "";
+        drawData();
+        document.getElementById("FS").focus();
+    };
+
+    function removeRow(rowId){
+        // newFS + "_" + newLbs
+        var rowIdStr = "" + rowId;
+        var removeIndex = data.map(function(item) { return item.fs+"_"+item.lbs; })
+                       .indexOf(rowId);
+        if(data && removeIndex > -1){
+            data.splice(removeIndex,1);
+        }
+        drawData();
+    }
+
+    function removeAllCargoRows(){
+        data = [];
+        drawData();
+    }
+    
+    function addAcRow() {
+        var newAcNum = document.getElementById("acNumber").value;
+        var newAcIndex = document.getElementById("acInitialIndex").value;
+        var newAcLbs = document.getElementById("acInitialLbs").value;
+        var newCrewLbs = document.getElementById("airCrewLbs").value;
+        var newCrewIdx = document.getElementById("airCrewIdx").value;
+        var equipIdx = document.getElementById("equipIdx").value;
+        var equipLbs = document.getElementById("equipLbs").value;
+        var formationIdx = document.getElementById("formationIdx").value;
+        var formationLbs = document.getElementById("formationLbs").value;
+        //document.getElementById("Total").insertAdjacentHTML('beforebegin',"<tr id='" + (index) + "'><td item-width='33%'>" + newFS +"</td><td item-width='33%'>" + newLbs +"</td><td item-width='33%'><input type='button' value='X' onclick='removeRow("+index+")'></input></td></tr>");
+        //index++;
+        var acDataItem = {  tailNum:newAcNum, 
+                            acIndex:newAcIndex, 
+                            lbs:newAcLbs, 
+                            crewLbs:newCrewLbs, 
+                            crewIdx:newCrewIdx,
+                            equipIdx: equipIdx,
+                            equipLbs: equipLbs,
+                            formationIdx: formationIdx,
+                            formationLbs: formationLbs};
+        if(acData && newAcNum){
+            var currentAc = getAcByTailNum(acData, newAcNum, true);
+            acData.push(acDataItem);
+        }
+        
+        calcAcBasiclData();
+
+        drawData();
+        populateDropDownTailNumbers("acSelector");
+        changeDropDownSelectedItem("acSelector", newAcNum);
+        saveToStorage("lastAcTailNum",newAcNum);
+        saveToStorage("acData", acData);
+        document.getElementById('acPanelTable').style.display = "none";
+    };
+
+    function removeAcRow(tailNum){
+        getAcByTailNum(acData, tailNum, true);
+        drawData();
+    }
+
+    function getAcByTailNum(array, tailNum, isRemove = false){
+        var itemsToRemove = 0;
+        if(isRemove){
+            itemsToRemove = 1;
+        }
+        for(var i = 0; i < array.length; i++) {
+            if (array[i].tailNum == tailNum) {
+                if(itemsToRemove){
+                    return array.splice(i, itemsToRemove)[0];
+                }else{
+                return array[i];
+                }
+            }
+        }
+    }
+
+    function Validate(id, val, min, max){
+        if(val == ""){
+            document.getElementById(id).className = "";
+            return;
+        }
+        if(val>=min && val <= max){
+            //OK
+            document.getElementById(id).className = "";
+        }else{
+            selectAll(id);
+            document.getElementById(id).className = "redBorder";
+        }
+    }
+
+    function openFuelPanel(){
+        document.getElementById('FuelPanel').style.display = "table-row";
+        document.getElementById('acFuel').setAttribute("disabled","disabled");
+        document.getElementById('acFuelIdx').setAttribute("disabled","disabled");
+        document.getElementById('outboards').focus();
+    }
+
+    function closeFuelPanel(){
+        document.getElementById('FuelPanel').style.display = "none";
+        document.getElementById('acFuel').removeAttribute("disabled");
+        document.getElementById('acFuelIdx').removeAttribute("disabled");
+        var outboards = document.getElementById('outboards').value;
+        var inboards = document.getElementById('inboards').value;
+        var aux = document.getElementById('aux').value;
+        var ext = document.getElementById('ext').value;
+        var totalFuel = 0;
+        var fuelIndex = 0;
+        if(outboards){
+            totalFuel += parseFloat(outboards);
+            fuelIndex += parseFloat(outboards)/4249;
+            currentAcData.outboards = outboards;
+        }
+        if(inboards){
+            totalFuel += parseFloat(inboards);
+            fuelIndex += parseFloat(inboards)/2353;
+            currentAcData.inboards = inboards;
+        }
+        if(aux){
+            totalFuel += parseFloat(aux);
+            fuelIndex += parseFloat(aux)/2151;
+            currentAcData.aux = aux;
+
+        }
+        if(ext){
+            totalFuel += parseFloat(ext);
+            fuelIndex += parseFloat(ext)/2806;
+            currentAcData.ext = ext;
+        }
+        
+        if(totalFuel){
+            document.getElementById('acFuel').value = totalFuel.toFixed(1);
+            document.getElementById('acFuelIdx').value = fuelIndex.toFixed(1);
+        }
+        drawData();
+    }
+    function openAcPanel(tailNum){
+        //alert(tailNum);
+        try{
+        document.getElementById('acPanelTable').style.display = "inline-table";
+        if(tailNum == "Add"){// "open" skips all these steps
+            clearAcByTailNumber();
+        }else if(tailNum == "Clear All"){
+            clearLocalStorage();
+        }else{
+            populateAcByTailNumber(tailNum);
+        }
+        }catch(e){            
+            alert(e);
+        }
+    }
+
+    function closeAcPanel(){
+        document.getElementById('acPanel').style.display = "none";
+    }
+
+    function getCurrentAc(){
+        return "Add";
+    }
+
+    function clearTotalTable(){
+        var TableBody = document.getElementById("TotalBody");
+        TableBody.innerHTML = "";
+        var TableFooter = document.getElementById("TotalFooter");
+        TableFooter.innerHTML = "";
+        var TotalCargo = document.getElementById("TotalCargo");
+        if(TotalCargo){// may not exist (first time)
+            TotalCargo.innerHTML = "";
+        }
+        var TakeoffData = document.getElementById("TakeoffData");
+        if(TakeoffData){// may not exist (first time)
+            TakeoffData.innerHTML = "";
+        }
+        var TakeoffDataHeader = document.getElementById("TakeoffDataHeader");
+        if(TakeoffDataHeader){// may not exist (first time)
+            TakeoffDataHeader.innerHTML = "";
+        }
+    }
+
+    function compareRows(a,b){
+        if (a.fs < b.fs)
+            return -1;
+        if (a.fs > b.fs)
+            return 1;
+        return 0;
+    }
+
+    function drawData(){        
+        clearTotalTable();
+        totalIndexChange = 0;
+        totalLbs = 0;
+        if(data && !isEmptyObj(data)){
+            data.sort(compareRows)
+            for(let rowItem of data){
+                var newFS = rowItem.fs;
+                var newLbs = rowItem.lbs;
+                var cargoIndexChange = calcIndex(newFS, newLbs);
+
+                totalIndexChange += parseFloat(cargoIndexChange);
+                totalLbs += parseFloat(newLbs);
+
+                var rawHtmlContent =  "<td item-width='25%'>" + cargoIndexChange +
+                    "</td><td item-width='25%'>" + newLbs +
+                    "</td><td item-width='25%'>" + newFS +                
+                    "</td><td item-width='25%'><input type='button' value='X' onclick='removeRow(\""+newFS + "_" + newLbs+"\")'></input></td>";
+                var tbodyRef = document.getElementById("TotalBody");
+                var newRow = tbodyRef.insertRow(tbodyRef.rows.length);
+                newRow.id = newFS + "_" + newLbs;
+                newRow.innerHTML = rawHtmlContent;
+                
+            };
+            if(data.length){
+
+                var rawTotalHtmlContent = "<td item-width='25%' id='mac'>" + "TOTAL:" +
+                    "</td><td item-width='25%' id='takoffLbs'>" + totalLbs.toFixed(1) +
+                    "</td><td item-width='25%' id=cargoTakeoffIndex'>" + totalIndexChange.toFixed(1) +"</td><td item-width='25%'><input type='button' value='Clear' onclick='removeAllCargoRows()'></input></td>";
+                var tFooterRef = document.getElementById("TotalFooter");
+                var newFooter = tFooterRef.insertRow(tFooterRef.rows.length);
+                newFooter.id="TotalCargo";
+                newFooter.className="borderTop";
+                newFooter.innerHTML = rawTotalHtmlContent;
+
+                saveToStorage("data", data);
+            }
+        }
+
+        var acIndex = document.getElementById("acIndex").value;
+        var acLbs = document.getElementById("acLbs").value;
+        var acFuel = document.getElementById("acFuel").value;
+        var acFuelIdx = document.getElementById("acFuelIdx").value;
+
+        if(acIndex && acLbs && acFuel && acFuelIdx){
+            var mac = calcMAC(parseFloat(acIndex) + parseFloat(acFuelIdx), acLbs, acFuel);
+            var takeoffIndex = (parseFloat(acIndex) + parseFloat(acFuelIdx) + parseFloat(totalIndexChange)).toFixed(1);
+            var takoffLbs = (parseFloat(acLbs) + parseFloat(acFuel) + parseFloat(totalLbs)).toFixed(0);
+
+            var rawTakeoffHtml =    "<td id=takeoffIndex'>"+ takeoffIndex +
+                                    "</td><td id='takoffLbs'>" + takoffLbs +
+                                    "</td><td id=takeoffMac'>" + mac + "</td>";
+            var takeoffDataRef = document.getElementById("TakeoffData");
+            document.getElementById("TakeoffDataHeader").innerHTML ="<tr><td>Index</td><td>Weight</td><td>%MAC</td></tr>";
+            takeoffDataRef.innerHTML = rawTakeoffHtml;
+            //save ac basic data
+            var currentAcTailNum = document.getElementById("acSelector").value;
+            if(!currentAcTailNum && currentAcTailNum != NaN){
+                var currentAc = getAcByTailNum(acData, currentAcTailNum, true);
+                if(currentAc){
+                    currentAc.tailNum = currentAcTailNum;
+                    currentAc.acLbs = acLbs;
+                    currentAc.acIndex = acIndex;                    
+                    currentAc.acFuel = acFuel;
+                    currentAc.acFuelIdx = acFuelIdx;
+                    currentAc.takeoffIndex = takeoffIndex;
+                    currentAc.takoffLbs = takoffLbs;
+                    currentAc.mac = mac;
+                    acData.push(currentAc);
+                    saveToStorage("acData", acData);
+                }
+            }
+        }else{            
+            var missing = "";
+            if(!acIndex){
+                missing = 'Aircraft Index';
+            }else if(!acLbs){
+                missing = 'Aircraft Lbs.';
+            }else if(!acFuel){
+                missing = 'Takeoff Fuel';
+            }else if(!acFuelIdx){
+                missing = 'Fuel Index';
+            }
+            if(missing){
+                document.getElementById("TakeoffDataHeader").innerHTML ="<tr><td colspan='100%'><font color='red'> Insert " + missing + "</font></td></tr>";
+            }
+        }
+    }
+
+    function calcIndex(fs, lbs){
+        var res = ((fs-533.46)* lbs)/50000;
+        return res.toFixed(1);
+    }
+    
+    function calcMAC(acIndex, acLbs, acFuel){
+        if(acIndex && acLbs && acFuel){
+            var index = parseFloat(acIndex) + parseFloat(totalIndexChange);
+            
+            var takeoffLbs = parseFloat(acLbs) + parseFloat(totalLbs) + parseFloat(acFuel);
+            var indexChangeFromCenter = parseFloat(((((index-100)* 50000)/takeoffLbs) + 533.46));
+            var res = 100 * (indexChangeFromCenter - 487.4)/164.5;
+            return res.toFixed(1);
+        }
+    }
+
+    function selectAll(id)
+    {
+        document.getElementById(id).focus();
+        document.getElementById(id).select();
+    }
+
+    function clearLocalStorage(){
+        try{
+            localStorage.clear();
+            location.reload();
+        }catch (e){
+            console.log(e);
+        }
+    }
+
+    function saveToStorage(key, dataToSave){
+        try{
+            localStorage.setItem(key, JSON.stringify(dataToSave));
+        }catch (e){
+            console.log(e);
+        }
+    }
+
+    function GetDatafromStorage(key = "acData"){
+            var storageData = null;
+        try{
+            storageData = localStorage.getItem(key);
+        }catch (e){
+            if(isLocalStorageEnabled){
+                alert(e);
+                isLocalStorageEnabled = false;
+            }
+        }
+        if(storageData == null){
+            if(key == "acData" || key == "data"){
+                storageData = [];
+            }else{
+                storageData = {};
+            }
+        }
+        if(!isEmptyObj(storageData)){
+            return JSON.parse(storageData);
+        }else{
+            return storageData;
+        }
+    }
+
+    function isEmptyObj(obj){
+        return Object.keys(obj).length === 0
+    }
+
+  </script>
